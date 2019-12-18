@@ -37,7 +37,8 @@ def run(prog):
             prog[prog[curr + 1]] = int(input("Please input a value: "))
             curr += 2
         elif instruction % 10 == 4:
-            print(prog[prog[curr + 1]])
+            modes = calculate_modes(instruction)
+            print(prog[curr + 1] if modes[0] else prog[prog[curr + 1]])
             curr += 2
     return prog[0]
 
