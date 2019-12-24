@@ -1,6 +1,3 @@
-from random import randint
-
-
 def calculate_modes(instruction):
     modes = []
     instruction = instruction // 100
@@ -16,7 +13,7 @@ def run(prog, grid):
     curr = 0
     relative_base = 0
     curr_x, curr_y = 0, 0
-    grid[(curr_x, curr_y)] = 0
+    grid[(curr_x, curr_y)] = (0, ".")
     i = 0
     dist = 0
     while prog[curr] != 99:
@@ -54,7 +51,20 @@ def run(prog, grid):
             elif (curr_x - 1, curr_y) not in grid:
                 i = 3
             else:
-                i = randint(1, 4)
+                d, _ = grid[curr_x, curr_y + 1]
+                if d != -1 and d < dist:
+                    i = 1
+                d, _ = grid[curr_x, curr_y - 1]
+                if d != -1 and d < dist:
+                    i = 2
+                d, _ = grid[curr_x - 1, curr_y]
+                if d != -1 and d < dist:
+                    i = 3
+                d, _ = grid[curr_x + 1, curr_y]
+                if d != -1 and d < dist:
+                    i = 4
+                if dist == 0:
+                    return
             if modes[0] == 0:
                 prog[prog[curr + 1]] = i
             elif modes[0] == 2:
@@ -65,36 +75,55 @@ def run(prog, grid):
                 relative_base + prog[curr + 1]]
             if o == 0:
                 if i == 1:
-                    grid[(curr_x, curr_y + 1)] = -1
+                    grid[(curr_x, curr_y + 1)] = (-1, "#")
                 elif i == 2:
-                    grid[(curr_x, curr_y - 1)] = -1
+                    grid[(curr_x, curr_y - 1)] = (-1, "#")
                 elif i == 3:
-                    grid[(curr_x - 1, curr_y)] = -1
+                    grid[(curr_x - 1, curr_y)] = (-1, "#")
                 elif i == 4:
-                    grid[(curr_x + 1, curr_y)] = -1
+                    grid[(curr_x + 1, curr_y)] = (-1, "#")
             elif o == 1:
                 if i == 1:
                     if (curr_x, curr_y + 1) not in grid:
-                        grid[(curr_x, curr_y + 1)] = dist + 1
-                    dist = grid[curr_x, curr_y + 1]
+                        grid[(curr_x, curr_y + 1)] = (dist + 1, ".")
+                    dist, _ = grid[curr_x, curr_y + 1]
                     curr_y += 1
                 elif i == 2:
                     if (curr_x, curr_y - 1) not in grid:
-                        grid[(curr_x, curr_y - 1)] = dist + 1
-                    dist = grid[(curr_x, curr_y - 1)]
+                        grid[(curr_x, curr_y - 1)] = (dist + 1, ".")
+                    dist, _ = grid[(curr_x, curr_y - 1)]
                     curr_y -= 1
                 elif i == 3:
                     if (curr_x - 1, curr_y) not in grid:
-                        grid[(curr_x - 1, curr_y)] = dist + 1
-                    dist = grid[(curr_x - 1, curr_y)]
+                        grid[(curr_x - 1, curr_y)] = (dist + 1, ".")
+                    dist, _ = grid[(curr_x - 1, curr_y)]
                     curr_x -= 1
                 elif i == 4:
                     if (curr_x + 1, curr_y) not in grid:
-                        grid[(curr_x + 1, curr_y)] = dist + 1
-                    dist = grid[(curr_x + 1, curr_y)]
+                        grid[(curr_x + 1, curr_y)] = (dist + 1, ".")
+                    dist, _ = grid[(curr_x + 1, curr_y)]
                     curr_x += 1
             elif o == 2:
-                return dist + 1
+                if i == 1:
+                    if (curr_x, curr_y + 1) not in grid:
+                        grid[(curr_x, curr_y + 1)] = (dist + 1, "O")
+                    dist, _ = grid[curr_x, curr_y + 1]
+                    curr_y += 1
+                elif i == 2:
+                    if (curr_x, curr_y - 1) not in grid:
+                        grid[(curr_x, curr_y - 1)] = (dist + 1, "O")
+                    dist, _ = grid[(curr_x, curr_y - 1)]
+                    curr_y -= 1
+                elif i == 3:
+                    if (curr_x - 1, curr_y) not in grid:
+                        grid[(curr_x - 1, curr_y)] = (dist + 1, "O")
+                    dist, _ = grid[(curr_x - 1, curr_y)]
+                    curr_x -= 1
+                elif i == 4:
+                    if (curr_x + 1, curr_y) not in grid:
+                        grid[(curr_x + 1, curr_y)] = (dist + 1, "O")
+                    dist, _ = grid[(curr_x + 1, curr_y)]
+                    curr_x += 1
             curr += 2
         elif instruction % 10 == 5:
             val = prog[curr + 1] if modes[0] == 1 else prog[prog[curr + 1]] if modes[0] == 0 else prog[
@@ -144,4 +173,59 @@ if __name__ == "__main__":
     prog = code_to_prog(f)
     prog.extend([0 for _ in range(10000)])
     grid = dict()
-    print(run(prog, grid))
+    run(prog, grid)
+    oxygen = -1
+    for dist, tile in grid.values():
+        if tile == "O":
+            print(dist)
+            oxygen = dist
+    max_dist, _ = max(grid.values())
+    max_x, max_y, min_x, min_y = 0, 0, 0, 0
+    for x, y in grid.keys():
+        max_x = max(max_x, x)
+        max_y = max(max_y, y)
+        min_x = min(min_x, x)
+        min_y = min(min_y, y)
+    m = []
+    for y in range(min_y, max_y):
+        m.append([])
+        for x in range(min_x, max_x):
+            tile = "#"
+            if (x, y) in grid:
+                _, tile = grid[(x, y)]
+            m[-1].append(tile)
+    start_x, start_y = -1, -1
+    for y in range(len(m)):
+        for x in range(len(m[y])):
+            if m[y][x] == "O":
+                start_x, start_y = x, y
+    queue = []
+    seen = set()
+    max_dist = -1
+    curr_dist = 0
+    queue.append((start_x, start_y, curr_dist))
+    while len(queue) > 0:
+        curr_x, curr_y, curr_dist = queue.pop()
+        max_dist = max(max_dist, curr_dist)
+        seen.add((curr_x, curr_y))
+        try:
+            if m[curr_y][curr_x + 1] != "#" and (curr_x + 1, curr_y) not in seen:
+                queue.append((curr_x + 1, curr_y, curr_dist + 1))
+        except IndexError:
+            pass
+        try:
+            if m[curr_y][curr_x - 1] != "#" and (curr_x - 1, curr_y) not in seen:
+                queue.append((curr_x - 1, curr_y, curr_dist + 1))
+        except IndexError:
+            pass
+        try:
+            if m[curr_y + 1][curr_x] != "#" and (curr_x, curr_y + 1) not in seen:
+                queue.append((curr_x, curr_y + 1, curr_dist + 1))
+        except IndexError:
+            pass
+        try:
+            if m[curr_y - 1][curr_x] != "#" and (curr_x, curr_y - 1) not in seen:
+                queue.append((curr_x, curr_y - 1, curr_dist + 1))
+        except IndexError:
+            pass
+    print(max_dist)
