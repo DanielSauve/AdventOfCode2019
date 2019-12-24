@@ -12,6 +12,8 @@ def calculate_modes(instruction):
 def run(prog, buff):
     curr = 0
     relative_base = 0
+    ball = (0, 0)
+    paddle = (0, 0)
     while prog[curr] != 99:
         instruction = prog[curr]
         modes = calculate_modes(instruction)
@@ -38,14 +40,23 @@ def run(prog, buff):
                 return
             curr += 4
         elif instruction % 10 == 3:
+            ball_x, _ = ball
+            paddle_x, _ = paddle
+            dir = 0 if ball_x == paddle_x else 1 if ball_x > paddle_x else -1
             if modes[0] == 0:
-                prog[prog[curr + 1]] = int(input("Please input a number: "))
+                prog[prog[curr + 1]] = dir
             elif modes[0] == 2:
-                prog[relative_base + prog[curr + 1]] = int(input("Please input a number: "))
+                prog[relative_base + prog[curr + 1]] = dir
             curr += 2
         elif instruction % 10 == 4:
-            buff.append(prog[curr + 1] if modes[0] == 1 else prog[prog[curr + 1]] if modes[0] == 0 else prog[
-                relative_base + prog[curr + 1]])
+            out = prog[curr + 1] if modes[0] == 1 else prog[prog[curr + 1]] if modes[0] == 0 else prog[
+                relative_base + prog[curr + 1]]
+            buff.append(out)
+            if len(buff) % 3 == 0:
+                if out == 4:
+                    ball = (buff[-3], buff[-2])
+                if out == 3:
+                    paddle = (buff[-3], buff[-2])
             curr += 2
         elif instruction % 10 == 5:
             val = prog[curr + 1] if modes[0] == 1 else prog[prog[curr + 1]] if modes[0] == 0 else prog[
@@ -101,3 +112,9 @@ if __name__ == "__main__":
         x, y, tile = out[i:i + 3]
         grid[(x, y)] = tile
     print(list(grid.values()).count(2))
+    prog = code_to_prog(f)
+    prog.extend([0 for _ in range(10000)])
+    prog[0] = 2
+    out = []
+    run(prog, out)
+    print(out[-1])
