@@ -1,72 +1,19 @@
-def calculate_modes(instruction):
-    modes = []
-    instruction = instruction // 100
-    modes.append(instruction % 10 == 1)
-    instruction = instruction // 10
-    modes.append(instruction % 10 == 1)
-    instruction = instruction // 10
-    modes.append(instruction % 10 == 1)
-    return modes
+from intcode import Intcode, AbstractIntcodeIO, code_to_prog
 
 
-def run(prog, inp):
-    curr = 0
-    curr_inp = 0
-    while prog[curr] != 99:
-        instruction = prog[curr]
-        modes = calculate_modes(instruction)
-        if instruction % 10 == 1:
-            val1 = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            val2 = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            out = prog[curr + 3]
-            try:
-                prog[out] = val1 + val2
-            except:
-                return
-            curr += 4
-        elif instruction % 10 == 2:
-            val1 = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            val2 = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            out = prog[curr + 3]
-            try:
-                prog[out] = val1 * val2
-            except:
-                return
-            curr += 4
-        elif instruction % 10 == 3:
-            prog[prog[curr + 1]] = inp[curr_inp]
-            curr_inp += 1
-            curr += 2
-        elif instruction % 10 == 4:
-            return prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-        elif instruction % 10 == 5:
-            val = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            if val != 0:
-                curr = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            else:
-                curr += 3
-        elif instruction % 10 == 6:
-            val = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            if val == 0:
-                curr = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            else:
-                curr += 3
-        elif instruction % 10 == 7:
-            val1 = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            val2 = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            out = prog[curr + 3]
-            prog[out] = 1 if val1 < val2 else 0
-            curr += 4
-        elif instruction % 10 == 8:
-            val1 = prog[curr + 1] if modes[0] else prog[prog[curr + 1]]
-            val2 = prog[curr + 2] if modes[1] else prog[prog[curr + 2]]
-            out = prog[curr + 3]
-            prog[out] = 1 if val1 == val2 else 0
-            curr += 4
+class AmplifierIntcodeIO(AbstractIntcodeIO):
+    def __init__(self, input_buffer, output_buffer):
+        self.input_pointer = 0
+        self.input_buffer = input_buffer
+        self.output_buffer = output_buffer
 
+    def input(self):
+        out = self.input_buffer[self.input_pointer]
+        self.input_pointer += 1
+        return out
 
-def code_to_prog(code):
-    return [int(x) for x in code.split(",")]
+    def output(self, out):
+        self.output_buffer.append(out)
 
 
 def gen_phases():
@@ -86,8 +33,13 @@ if __name__ == "__main__":
     for phase in phases:
         output = 0
         for amp in phase:
+            inp = [amp, output]
+            out = []
+            io = AmplifierIntcodeIO(inp, out)
             prog = code_to_prog(f)
-            output = run(prog, [amp, output])
+            intcode = Intcode(prog, io)
+            intcode.run()
+            output = out[0]
         if output > max_signal:
             max_signal = output
             phase_combo = phase
