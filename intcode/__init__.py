@@ -1,8 +1,30 @@
+from abc import abstractmethod
+
+
+class AbstractIntcodeIO:
+    @abstractmethod
+    def input(self):
+        pass
+
+    @abstractmethod
+    def output(self, out):
+        pass
+
+
+class DefaultIntcodeIO(AbstractIntcodeIO):
+    def input(self):
+        return int(input("Please input a number: "))
+
+    def output(self, out):
+        print(out)
+
+
 class Intcode:
-    def __init__(self, prog):
+    def __init__(self, prog, io):
         self.curr = 0
         self.relative_base = 0
         self.prog = prog
+        self.io = io
 
     @staticmethod
     def calculate_modes(instruction):
@@ -46,10 +68,10 @@ class Intcode:
                     return
                 self.curr += 4
             elif instruction % 10 == 3:
-                self.prog[addresses[0]] = int(input("Please input a number: "))
+                self.prog[addresses[0]] = self.io.input()
                 self.curr += 2
             elif instruction % 10 == 4:
-                print(self.prog[addresses[0]])
+                self.io.output(self.prog[addresses[0]])
                 self.curr += 2
             elif instruction % 10 == 5:
                 if self.prog[addresses[0]] != 0:
