@@ -33,7 +33,7 @@ class RepairIntcodeIO(AbstractIntcodeIO):
             if d != -1 and d < self.dist:
                 self.dir = 4
             if self.dist == 0:
-                raise InterruptedError("Finished")
+                return False
         return self.dir
 
     def output(self, out):
@@ -97,10 +97,7 @@ if __name__ == "__main__":
     grid = dict()
     io = RepairIntcodeIO(grid)
     intcode = Intcode(prog, io)
-    try:
-        intcode.run()
-    except InterruptedError:
-        pass
+    intcode.run()
     oxygen = -1
     for dist, tile in grid.values():
         if tile == "O":

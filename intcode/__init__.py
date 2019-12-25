@@ -68,7 +68,10 @@ class Intcode:
                     return
                 self.curr += 4
             elif instruction % 10 == 3:
-                self.prog[addresses[0]] = self.io.input()
+                inp = self.io.input()
+                if not inp and type(inp) == bool:
+                    return
+                self.prog[addresses[0]] = inp
                 self.curr += 2
             elif instruction % 10 == 4:
                 self.io.output(self.prog[addresses[0]])
