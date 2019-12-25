@@ -70,7 +70,7 @@ class Intcode:
             elif instruction % 10 == 3:
                 inp = self.io.input()
                 if not inp and type(inp) == bool:
-                    return
+                    return False
                 self.prog[addresses[0]] = inp
                 self.curr += 2
             elif instruction % 10 == 4:
@@ -95,6 +95,7 @@ class Intcode:
             elif instruction % 10 == 9:
                 self.relative_base += self.prog[addresses[0]]
                 self.curr += 2
+        return True
 
 
 def code_to_prog(code):
