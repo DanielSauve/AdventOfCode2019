@@ -111,9 +111,9 @@ if __name__ == "__main__":
         min_x = min(min_x, x)
         min_y = min(min_y, y)
     m = []
-    for y in range(min_y, max_y):
+    for y in range(min_y, max_y + 1):
         m.append([])
-        for x in range(min_x, max_x):
+        for x in range(min_x, max_x + 1):
             tile = "#"
             if (x, y) in grid:
                 _, tile = grid[(x, y)]
